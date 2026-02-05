@@ -11,3 +11,4 @@ class Config:
     GROQ_API_KEY = os.getenv("GROQ_API_KEY")
     EMBEDDING_MODEL = "BAAI/bge-base-en-v1.5"
     RAG_MODEL = "llama-3.1-8b-instant"
+    COLLECTION_NAME = "flipkart_database"
