@@ -1,11 +1,298 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flipkart Chatbot</title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+  <!-- jQuery -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            // Dark theme - Navy blue palette
+            navyDark: "#0a1628",      
+            navyMid: "#162c4a",       
+            navyLight: "#1e3a5f",     
+            accentBlue: "#3b82f6",    
+            accentOrange: "#f97316",  
+            
+            // Light theme - Clean white palette
+            lightBg: "#f8fafc",       
+            lightCard: "#ffffff",     
+            lightBorder: "#e2e8f0",   
+            textLight: "#1e293b"      
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    /* Custom scrollbar */
+    #chatBody::-webkit-scrollbar {
+      width: 8px;
+    }
+    #chatBody::-webkit-scrollbar-thumb {
+      background: #3b82f6;
+      border-radius: 10px;
+    }
+    #chatBody::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    /* Typing dots */
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      display: inline-block;
+      animation: bounce 1.2s infinite ease-in-out;
+    }
+
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
+      40% { transform: scale(1); opacity: 1; }
+    }
+
+    /* Fade in message */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0px); }
+    }
+
+    .animate-fadeIn {
+      animation: fadeIn 0.25s ease-in-out;
+    }
+
+    /* Full screen layout */
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+  </style>
 </head>
-<body>
-    
+
+<body class="h-screen bg-navyDark dark:bg-lightBg transition duration-300">
+
+  <!-- Main Container - Full Screen -->
+  <div class="h-screen flex flex-col">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between px-6 py-3 bg-navyMid dark:bg-white border-b border-white/10 dark:border-lightBorder shadow-sm">
+
+      <div class="flex items-center gap-3">
+        <div class="relative">
+          <img src="https://static.vecteezy.com/system/resources/previews/016/017/018/non_2x/ecommerce-icon-free-png.png"
+               class="w-10 h-10 rounded-full border-2 border-accentBlue shadow-sm" />
+          <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 border-2 border-navyMid dark:border-white rounded-full"></span>
+        </div>
+
+        <div>
+          <h1 class="text-white dark:text-textLight font-semibold text-base tracking-tight">
+            Flipkart Assistant
+          </h1>
+          <p class="text-white/60 dark:text-slate-500 text-xs">
+            Online • Ready to help
+          </p>
+        </div>
+      </div>
+
+      <!-- Dark Mode Toggle -->
+      <button id="themeToggle"
+        class="w-9 h-9 flex items-center justify-center rounded-lg bg-navyDark/40 dark:bg-slate-100 border border-white/20 dark:border-lightBorder text-white dark:text-textLight hover:bg-navyDark/60 dark:hover:bg-slate-200 transition">
+        <i class="fa-solid fa-sun text-sm"></i>
+      </button>
+    </div>
+
+    <!-- Chat Body - Takes remaining space -->
+    <div id="chatBody" class="flex-1 overflow-y-auto px-4 py-6 bg-navyDark dark:bg-lightBg">
+      
+      <!-- Center content container like ChatGPT -->
+      <div class="max-w-3xl mx-auto space-y-6">
+
+        <!-- Welcome message -->
+        <div class="flex items-start gap-4 animate-fadeIn">
+          <div class="flex-shrink-0">
+            <img src="https://static.vecteezy.com/system/resources/previews/016/017/018/non_2x/ecommerce-icon-free-png.png"
+                 class="w-8 h-8 rounded-full border-2 border-accentBlue/50" />
+          </div>
+
+          <div class="flex-1">
+            <div class="text-white dark:text-textLight text-sm leading-relaxed">
+              <p class="mb-2">Hi 👋 I'm your Flipkart assistant.</p>
+              <p>Ask me about any product reviews or recommendations!</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Footer Input Area -->
+    <div class="border-t border-white/10 dark:border-lightBorder bg-navyMid dark:bg-white">
+      <div class="max-w-3xl mx-auto px-4 py-4">
+        <form id="messageArea" class="flex items-end gap-3">
+
+          <input
+            type="text"
+            id="text"
+            name="msg"
+            placeholder="Message Flipkart Assistant..."
+            autocomplete="off"
+            required
+            class="flex-1 bg-navyLight/60 dark:bg-slate-100 text-white dark:text-textLight placeholder-white/50 dark:placeholder-slate-400 px-4 py-3 rounded-xl outline-none border border-white/20 dark:border-slate-300 focus:border-accentBlue focus:ring-2 focus:ring-accentBlue/30 transition resize-none"
+          />
+
+          <button
+            type="submit"
+            id="send"
+            class="flex-shrink-0 bg-accentBlue hover:bg-accentBlue/90 text-white w-10 h-10 rounded-lg shadow-sm transition flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <i class="fa-solid fa-arrow-up text-sm"></i>
+          </button>
+
+        </form>
+
+        <p class="text-xs text-white/30 dark:text-slate-400 mt-2 text-center">
+          Flipkart Assistant can make mistakes. Check important info.
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Dark mode toggle
+    const toggleBtn = document.getElementById("themeToggle");
+    const htmlTag = document.documentElement;
+
+    // Set initial state (dark mode by default)
+    htmlTag.classList.remove("dark");
+
+    toggleBtn.addEventListener("click", () => {
+      htmlTag.classList.toggle("dark");
+
+      if (htmlTag.classList.contains("dark")) {
+        toggleBtn.innerHTML = `<i class="fa-solid fa-moon text-sm"></i>`;
+      } else {
+        toggleBtn.innerHTML = `<i class="fa-solid fa-sun text-sm"></i>`;
+      }
+    });
+
+    $(document).ready(function () {
+
+      function scrollToBottom() {
+        $("#chatBody").scrollTop($("#chatBody")[0].scrollHeight);
+      }
+
+      function typingIndicator() {
+        return `
+          <div id="typing" class="flex items-start gap-4 animate-fadeIn">
+            <div class="flex-shrink-0">
+              <img src="https://static.vecteezy.com/system/resources/previews/016/017/018/non_2x/ecommerce-icon-free-png.png"
+                   class="w-8 h-8 rounded-full border-2 border-accentBlue/50" />
+            </div>
+
+            <div class="flex-1">
+              <div class="inline-block">
+                <div class="flex gap-1.5 items-center px-3 py-2 bg-navyLight/60 dark:bg-slate-100 rounded-lg">
+                  <span class="dot bg-accentBlue dark:bg-slate-400"></span>
+                  <span class="dot bg-accentBlue dark:bg-slate-400"></span>
+                  <span class="dot bg-accentBlue dark:bg-slate-400"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      $("#messageArea").on("submit", function (event) {
+        event.preventDefault();
+
+        const date = new Date();
+        const hour = date.getHours();
+        const minute = date.getMinutes().toString().padStart(2, "0");
+        const str_time = hour + ":" + minute;
+
+        let rawText = $("#text").val();
+
+        // User Message (ChatGPT style)
+        let userHtml = `
+          <div class="flex items-start gap-4 animate-fadeIn bg-navyLight/30 dark:bg-slate-50 py-6 -mx-4 px-4 rounded-2xl">
+            <div class="flex-shrink-0">
+              <div class="w-8 h-8 rounded-full bg-accentBlue flex items-center justify-center text-white text-sm font-semibold">
+                U
+              </div>
+            </div>
+
+            <div class="flex-1">
+              <div class="text-white dark:text-textLight text-sm leading-relaxed">
+                ${rawText}
+              </div>
+            </div>
+          </div>
+        `;
+
+        $("#text").val("");
+        
+        // Append to centered container
+        $("#chatBody .max-w-3xl").append(userHtml);
+        scrollToBottom();
+
+        // Add typing indicator
+        $("#chatBody .max-w-3xl").append(typingIndicator());
+        scrollToBottom();
+
+        // AJAX Request
+        $.ajax({
+          data: { msg: rawText },
+          type: "POST",
+          url: "/get",
+        }).done(function (data) {
+
+          // Remove typing animation
+          $("#typing").remove();
+
+          // Bot Response (ChatGPT style)
+          let botHtml = `
+            <div class="flex items-start gap-4 animate-fadeIn py-6 -mx-4 px-4">
+              <div class="flex-shrink-0">
+                <img src="https://static.vecteezy.com/system/resources/previews/016/017/018/non_2x/ecommerce-icon-free-png.png"
+                     class="w-8 h-8 rounded-full border-2 border-accentBlue/50" />
+              </div>
+
+              <div class="flex-1">
+                <div class="text-white dark:text-textLight text-sm leading-relaxed">
+                  ${data}
+                </div>
+              </div>
+            </div>
+          `;
+
+          $("#chatBody .max-w-3xl").append(botHtml);
+          scrollToBottom();
+        });
+
+      });
+    });
+  </script>
+
 </body>
 </html>
